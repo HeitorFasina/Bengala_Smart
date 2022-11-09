@@ -1,9 +1,15 @@
 #include "Credenciais.h"
 
 #define MYSQL_DEBUG_PORT Serial
-
 #define _MYSQL_LOGLEVEL_ 1
+int botao = 4;
+#define motor 3
+#define pinTrigger 8
+#define pinEcho 7
 
+long distancia
+
+//#include <Ultrasonic.h> 
 #include <MySQL_Generic.h>
 
 IPAddress server(185, 42, 117, 115);
@@ -13,16 +19,19 @@ uint16_t server_port = 3306;
 char default_database[] = "b12nbguyeuypjmt36i5j";
 char default_table[]    = "localizacao";
 
-String default_value    = "-22.8875468,-47.0463506"; 
+String default_value = "-22.8875468,-47.0463506"; 
 
 String INSERT_SQL = String("INSERT INTO ") + default_database + "." + default_table 
-                 + " (coordenada) VALUES ('" + default_value + "')";
+                  + " (coordenada) VALUES ('" + default_value + "')";
 
 MySQL_Connection conn((Client *)&client);
 MySQL_Query *query_mem;
 
 void setup()
 {
+  pinMode(botao, INPUT_PULLUP);
+  pinMode(motor, OUTPUT);
+  
   Serial.begin(115200);
   while (!Serial && millis() < 5000);
 
@@ -39,10 +48,8 @@ void setup()
   }
 
   MYSQL_DISPLAY1("Conectado à rede. Endereço IP:", WiFi.localIP());
-
-  MYSQL_DISPLAY3("Conectando ao SQL Server @", server, ", Porta =", server_port);
-  MYSQL_DISPLAY5("Usuário =", user, ", Senha =", password, ", DB =", default_database);
 }
+
 
 void runInsert()
 {
@@ -67,23 +74,45 @@ void runInsert()
   }
 }
 
-void loop()
+
+void conectar()
 {
   MYSQL_DISPLAY("Conectando...");
-  
   if (conn.connectNonBlocking(server, server_port, user, password) != RESULT_FAIL)
   {
     delay(500);
     runInsert();
     conn.close();
-  } 
+  }
   else 
   {
-    MYSQL_DISPLAY("\nConexão falhou. Trying again on next iteration.");
+    MYSQL_DISPLAY("\nConexão falhou.");
   }
+}
 
-  MYSQL_DISPLAY("\nSleeping...");
-  MYSQL_DISPLAY("================================================");
- 
-  delay(500);
+
+void loop()
+{
+  if (digitalRead(botao) == LOW)
+  {
+    conectar();
+  }
+/*
+  distancia = sensorUltrassonico.Ranging(CM);
+  
+  Serial.print(distancia);
+  Serial.println("cm");
+
+  
+  if (distancia <= 20)
+  {
+    digitalWrite(motor, HIGH);
+  }
+  else
+  {
+    digitalWrite(motor, LOW);
+  }
+*/
+
+  delay(100);
 }
