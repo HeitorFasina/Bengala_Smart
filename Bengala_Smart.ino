@@ -2,14 +2,18 @@
 
 #define MYSQL_DEBUG_PORT Serial
 #define _MYSQL_LOGLEVEL_ 1
-int botao = 4;
-#define motor 3
-#define pinTrigger 8
-#define pinEcho 7
 
-long distancia
+#define SOUND_VELOCITY 0.034
 
-//#include <Ultrasonic.h> 
+int botao = 16;
+int estadoBotao = 0;
+int motor = 4;
+const int pinTrigger = 12;
+const int pinEcho = 13;
+
+long duracao;
+float distanciaCm;
+
 #include <MySQL_Generic.h>
 
 IPAddress server(185, 42, 117, 115);
@@ -29,9 +33,11 @@ MySQL_Query *query_mem;
 
 void setup()
 {
-  pinMode(botao, INPUT_PULLUP);
+  pinMode(botao, INPUT);
   pinMode(motor, OUTPUT);
-  
+  pinMode(pinTrigger, OUTPUT);
+  pinMode(pinEcho, INPUT);
+
   Serial.begin(115200);
   while (!Serial && millis() < 5000);
 
@@ -93,18 +99,28 @@ void conectar()
 
 void loop()
 {
-  if (digitalRead(botao) == LOW)
+  /*
+  estadoBotao = digitalRead(botao);
+  if (estadoBotao == LOW)
   {
     conectar();
+    delay(100);
   }
-/*
-  distancia = sensorUltrassonico.Ranging(CM);
-  
-  Serial.print(distancia);
-  Serial.println("cm");
+  */
 
-  
-  if (distancia <= 20)
+  digitalWrite(pinTrigger, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pinTrigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinTrigger, LOW);
+
+  duracao = pulseIn(pinEcho, HIGH);
+  distanciaCm = duracao * SOUND_VELOCITY / 2;
+
+  Serial.print("Distancia (cm): ");
+  Serial.println(distanciaCm);
+
+  if (distanciaCm <= 25)
   {
     digitalWrite(motor, HIGH);
   }
@@ -112,7 +128,6 @@ void loop()
   {
     digitalWrite(motor, LOW);
   }
-*/
 
   delay(100);
 }
